@@ -367,6 +367,28 @@ void saveCSV(std::string filename, std::string timestamp, std::string img_path,
 
 //#define MM_DEBUG
 
+typedef std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>>
+    VecVector3f;
+typedef std::vector<Eigen::Vector2f, Eigen::aligned_allocator<Eigen::Vector2f>>
+    VecVector2f;
+typedef std::vector<int[3]>  VecTriangle;
+
+void buildMeshDepthMap(const double focalU,
+                       const double focalV,
+                       const double centerU,
+                       const double centerV,
+                       const double dimU,
+                       const double dimV,
+                       const VecVector3f &input_landmarks_3d,
+                       VecVector3f &output_landmarks_3d,
+                       std::vector<int[3]> &output_triangle,
+                       VecVector2f &output_landmarks_2d,
+                       const double laplaceAlpha = 0.1,
+                       const unsigned int smoothingIteration = 3,
+                       const double maxDelta = 0.2) {
+
+}
+
 void buildMeshDepthMap(const double focalU,
                        const double focalV,
                        const double centerU,
