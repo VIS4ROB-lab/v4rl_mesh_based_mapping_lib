@@ -17,15 +17,15 @@ void buildHemiSphere(double ro_step, double phi_step,
                      std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>>
                      &landmarks_3d) {
 
-  double x, y, z;
+  float x, y, z;
 
-  for (double ro = central_hole; ro < pi / 2; ro += ro_step) {
+  for (double ro = central_hole; ro < pi / 2.0; ro += ro_step) {
     z = radius * std::cos(ro);
 
     for (double phi = -pi; phi < pi; phi += phi_step) {
       x = radius * std::sin(ro) * std::cos(phi);
       y = radius * std::sin(ro) * std::sin(phi);
-      printf("%lf,%lf,%lf\n", x, y, z);
+      landmarks_3d.push_back(Eigen::Vector3f(x, y, z));
     }
   }
 }
@@ -42,16 +42,22 @@ int main(int, char **) {
   const double laplaceAlpha = 0.1;
   const unsigned int smoothingIteration = 3;
   const double maxDelta = 0.2;
-  std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>>
-      input_landmarks_3d;//in camera frame
+  VecPoint3f
+  landmarks_3d;//in camera frame
 
-  buildHemiSphere(0.1, 0.6, 10, 0.3, input_landmarks_3d);
+  buildHemiSphere(0.01, 0.1, 10, 0, landmarks_3d);
 
-  //build mesh
-  //mesh to dmap
-  //filter
-  //mesh to dmap
+  VecPoint3f landmarks_3d_filtered = landmarks_3d;
 
-//  printf("%s", point_cloud);
+  VecTriangle triangles;
+  mesh_based_mapping::buildMeshDepthMap(focalU, focalV, centerU, centerV, dimU,
+                                        dimV, landmarks_3d_filtered, triangles, laplaceAlpha, smoothingIteration,
+                                        maxDelta);
+
+  mesh_based_mapping::saveObj("/tmp/mesh_before.obj", landmarks_3d, triangles);
+
+  mesh_based_mapping::saveObj("/tmp/mesh_after.obj", landmarks_3d_filtered,
+                              triangles);
+
   return 0;
 }

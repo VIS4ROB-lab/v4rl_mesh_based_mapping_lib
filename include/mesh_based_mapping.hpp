@@ -39,14 +39,18 @@
 
 
 typedef std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f> >
-VecPoint3F;
+VecPoint3f;
+typedef std::vector<Eigen::Vector2f, Eigen::aligned_allocator<Eigen::Vector2f>>
+    VecPoint2f;
+typedef std::vector<Eigen::Vector3i, Eigen::aligned_allocator<Eigen::Vector3i>>
+    VecTriangle;
 
 namespace mesh_based_mapping {
 
 /**
 
 */
-void filteringAndSmoothing(VecPoint3F &points3d,
+void filteringAndSmoothing(VecPoint3f &points3d,
                            std::vector<GEOM_FADE2D::Triangle2 *> triangles,
                            std::vector<bool> &blacklist,
                            const double laplaceAlpha = 0.1,
@@ -107,7 +111,7 @@ void filteringAndSmoothing(VecPoint3F &points3d,
 
   //smooth
   std::vector<std::set<unsigned int>> adjTable(points3d.size());
-  VecPoint3F points3dNew(points3d.size());
+  VecPoint3f points3dNew(points3d.size());
 
   for (unsigned int i = 0; i < triangles.size(); i++) { //build adjcense table
     if (blacklist[i]) {
@@ -169,7 +173,7 @@ void projectLandmarks(const double focalU, const double focalV,
                       const double minQuality,
                       okvis::kinematics::Transformation &T_WCRef,
                       const okvis::MapPointVector &matchedLandmarks,
-                      VecPoint3F &filteredLandmarks,
+                      VecPoint3f &filteredLandmarks,
                       std::vector<GEOM_FADE2D::Point2> &landmarks2D) {
 
   okvis::kinematics::Transformation T_CRefW =  T_WCRef.inverse();
@@ -209,6 +213,28 @@ void projectLandmarks(const double focalU, const double focalV,
   }
 }
 
+void projectLandmarks(const double &focalU, const double &focalV,
+                      const double &centerU, const double &centerV,
+                      const double &dimU, const double &dimV,
+                      VecPoint3f &landmarks,
+                      std::vector<GEOM_FADE2D::Point2> &landmarks2D) {
+
+
+  for (unsigned int i = 0 ; i < landmarks.size() ; i++) {
+    Eigen::Vector3f &pt_CRef = landmarks[i];
+
+    double x = ((pt_CRef(0) / pt_CRef(2)) * focalU) + centerU;
+    double y = ((pt_CRef(1) / pt_CRef(2)) * focalV) + centerV;
+
+    if (x <= 0 || y <= 0 || x >= dimU || y >= dimV) {
+      continue;
+    }
+
+    landmarks2D.push_back(GEOM_FADE2D::Point2(x, y));
+    landmarks2D.back().setCustomIndex(i);
+  }
+}
+
 
 /**
 
@@ -224,7 +250,7 @@ void writeCSV(std::string filename, cv::Mat m) {
 /**
 
 */
-void saveObj(std::string filepath, VecPoint3F &points3d,
+void saveObj(std::string filepath, VecPoint3f &points3d,
              std::vector<GEOM_FADE2D::Point2> points2D,
              std::vector<GEOM_FADE2D::Triangle2 *> triangles, std::vector<bool> &blacklist) {
   std::ofstream ofs;
@@ -253,6 +279,30 @@ void saveObj(std::string filepath, VecPoint3F &points3d,
           1)->getCustomIndex() + 1 << " ";
     ofs << t->getCorner(0)->getCustomIndex() + 1 << "/" << t->getCorner(
           0)->getCustomIndex() + 1 << std::endl;
+  }
+
+  ofs.close();
+}
+
+void saveObj(std::string filepath,
+             const VecPoint3f &landmarks_3d,
+             const VecTriangle &triangles) {
+
+  std::ofstream ofs;
+  ofs.open(filepath, std::ofstream::out);
+
+
+  for (unsigned int i = 0; i < landmarks_3d.size(); i++) {
+    const Eigen::Vector3f &hPoint = landmarks_3d[i];
+    ofs << "v "  << hPoint[0] << " " << hPoint[1] << " " << hPoint[2]  << std::endl;
+  }
+
+  for (unsigned int i = 0; i < triangles.size(); i++) {
+
+    const Eigen::Vector3i &t = triangles[i];//obj format starts from 1 instead zero
+    ofs << "f "  << t[2] + 1 << " ";
+    ofs <<  t[1] + 1 << " ";
+    ofs <<  t[0] + 1 << std::endl;
   }
 
   ofs.close();
@@ -367,25 +417,53 @@ void saveCSV(std::string filename, std::string timestamp, std::string img_path,
 
 //#define MM_DEBUG
 
-typedef std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>>
-    VecVector3f;
-typedef std::vector<Eigen::Vector2f, Eigen::aligned_allocator<Eigen::Vector2f>>
-    VecVector2f;
-typedef std::vector<int[3]>  VecTriangle;
 
-void buildMeshDepthMap(const double focalU,
-                       const double focalV,
-                       const double centerU,
-                       const double centerV,
-                       const double dimU,
-                       const double dimV,
-                       const VecVector3f &input_landmarks_3d,
-                       VecVector3f &output_landmarks_3d,
-                       std::vector<int[3]> &output_triangle,
-                       VecVector2f &output_landmarks_2d,
+
+void buildMeshDepthMap(const double &focalU,
+                       const double &focalV,
+                       const double &centerU,
+                       const double &centerV,
+                       const double &dimU,
+                       const double &dimV,
+                       VecPoint3f &in_out_landmarks_3d,
+                       VecTriangle &output_triangles,
                        const double laplaceAlpha = 0.1,
                        const unsigned int smoothingIteration = 3,
                        const double maxDelta = 0.2) {
+  if (in_out_landmarks_3d.size() < 5) {
+    return;
+  }
+
+  std::vector<GEOM_FADE2D::Point2> points2D;
+  projectLandmarks(focalU, focalV, centerU, centerV, dimU, dimV,
+                   in_out_landmarks_3d, points2D);
+
+  GEOM_FADE2D::Fade_2D dt;
+  dt.insert(points2D);
+  std::vector<GEOM_FADE2D::Triangle2 *> vAllTriangles;
+  dt.getTrianglePointers(vAllTriangles);
+
+  std::vector<bool> blacklist(vAllTriangles.size(), false);
+
+  filteringAndSmoothing(in_out_landmarks_3d, vAllTriangles, blacklist,
+                        laplaceAlpha,
+                        smoothingIteration, maxDelta);
+
+  for (uint i = 0; i < vAllTriangles.size() ; i++) {
+    if (blacklist[i]) {
+      continue;
+    }
+
+    GEOM_FADE2D::Triangle2 *itri = vAllTriangles[i];
+
+    Eigen::Vector3i triangle(itri->getCorner(0)->getCustomIndex(),
+                             itri->getCorner(1)->getCustomIndex(),
+                             itri->getCorner(2)->getCustomIndex());
+
+    output_triangles.push_back(triangle);
+
+  }
+
 
 }
 
@@ -406,7 +484,7 @@ void buildMeshDepthMap(const double focalU,
                        const double maxDelta = 0.2) {
 
   std::vector<GEOM_FADE2D::Point2> points2D;
-  VecPoint3F points3D;
+  VecPoint3f points3D;
 
   projectLandmarks(focalU, focalV, centerU, centerV,
                    dimU, dimV, minQuality, T_WCRef,
@@ -468,7 +546,7 @@ void buildMeshDepthMap(const double focalU,
 #endif
   ///3DV stuff
   ///
-  VecPoint3F point3D_world_frame;
+  VecPoint3f point3D_world_frame;
 
   for (size_t i = 0; i < points3D.size(); i++) {
     Eigen::Vector4d pt_cam;
