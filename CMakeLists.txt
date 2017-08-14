@@ -12,8 +12,8 @@ find_package( OpenCV REQUIRED )
 include_directories( ${EIGEN3_INCLUDE_DIR} )
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 
-
-include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/include )
+add_library(${PROJECT_NAME} STATIC src/dependency-tracker.cc ${HPPS})
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 add_subdirectory(examples/simple_example)
 

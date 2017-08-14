@@ -1,14 +1,6 @@
 
-#include<mesh_based_mapping.hpp>
-
-//file with the input point cloud
-#include "obj.data" // defines the const char* point_cloud variable
-
-//void readObjVertex(std::basic_istream input_stream,
-//                   std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>>
-//                   &landmarks_3d) {
-
-//}
+#include<mesh_based_mapping/mesh_based_mapping.hpp>
+#include<mesh_based_mapping/utils/file_io.hpp>
 
 const double pi = std::acos(-1);
 
@@ -42,14 +34,13 @@ int main(int, char **) {
   const double laplaceAlpha = 0.1;
   const unsigned int smoothingIteration = 3;
   const double maxDelta = 0.2;
-  VecPoint3f
-  landmarks_3d;//in camera frame
+  mesh_based_mapping::VecPoint3f landmarks_3d;//in camera frame
 
   buildHemiSphere(0.01, 0.1, 10, 0, landmarks_3d);
 
-  VecPoint3f landmarks_3d_filtered = landmarks_3d;
+  mesh_based_mapping::VecPoint3f landmarks_3d_filtered = landmarks_3d;
 
-  VecTriangle triangles;
+  mesh_based_mapping::VecTriangle triangles;
   mesh_based_mapping::buildMeshDepthMap(focalU, focalV, centerU, centerV, dimU,
                                         dimV, landmarks_3d_filtered, triangles, laplaceAlpha, smoothingIteration,
                                         maxDelta);
