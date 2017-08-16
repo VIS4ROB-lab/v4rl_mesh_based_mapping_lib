@@ -30,10 +30,7 @@ int main(int, char **) {
   const double centerU = 400.5;
   const double centerV = 400.5;
   const double dimU = 800;
-  const double dimV = 800;
-  const double laplaceAlpha = 0.1;
-  const unsigned int smoothingIteration = 3;
-  const double maxDelta = 0.2;
+  const double dimV = 800;  
   mesh_based_mapping::VecPoint3f landmarks_3d;//in camera frame
 
   buildHemiSphere(0.01, 0.1, 10, 0, landmarks_3d);
@@ -47,13 +44,9 @@ int main(int, char **) {
   mapper.ComputeMesh();
   mapper.GetMesh(landmarks_3d_filtered,landmarks_2d,triangles);
 
-//  mesh_based_mapping::buildMeshDepthMap(focalU, focalV, centerU, centerV, dimU,
-//                                        dimV, landmarks_3d_filtered, triangles, laplaceAlpha, smoothingIteration,
-//                                        maxDelta);
+  mesh_based_mapping::saveObj("/tmp/mesh_before2.obj", landmarks_3d, *triangles);
 
-  mesh_based_mapping::saveObj("/tmp/mesh_before1.obj", landmarks_3d, *triangles);
-
-  mesh_based_mapping::saveObj("/tmp/mesh_after1.obj", *landmarks_3d_filtered,*triangles);
+  mesh_based_mapping::saveObj("/tmp/mesh_after2.obj", *landmarks_3d_filtered,*triangles);
 
   return 0;
 }

@@ -32,6 +32,7 @@
 namespace GEOM_FADE2D {
 class Point2;
 class Triangle2;
+class Fade_2D;
 }
 
 namespace mesh_based_mapping {
@@ -51,7 +52,6 @@ class MeshMapper {
 
   ~MeshMapper();
 
-  void Clear();
 
   void SetPoints(double focal_u, double focal_v,
                  double center_u, double center_v,
@@ -60,77 +60,44 @@ class MeshMapper {
   void SetPoints(const VecPoint2f &in_landmarks_2d,
                  const VecPoint3f &in_landmarks_3d);
 
-  void ComputeMesh() {
-    // ComputeMeshInPlace(landmarks_2d_.get(), landmarks_3d_, triangles_);
-  }
-
-  bool GetFilteredLandmarks(const VecPoint3f *&out_landmarks_3d) const;
+  void ComputeMesh();
 
   bool GetMesh(const VecPoint3f *&out_landmarks_3d,
                const VecPoint2f *&out_landmarks_2d,
-               const VecTriangle *&out_triangles);
+               const VecTriangle
+               * &out_triangles); //on the landmarks vector could include unused landmaks by the triangles.(noise)
 
-//  void ComputeMeshInPlace(const VecPoint2f &in_landmarks_2d,
-//                          VecPoint3f &in_out_landmarks_3d, VecTriangle &out_triangles);
-
+  void Clear();
 
  private:
+
+  void convert2dLandmarks(const VecPoint2f &in_landmarks_2d);
+
+  void ProjectLandmarks(const double &focalU, const double &focalV,
+                        const double &centerU, const double &centerV, const double &dimU,
+                        const double &dimV, const mesh_based_mapping::VecPoint3f &landmarks);
+
+  void filteringAndSmoothing(mesh_based_mapping::VecPoint3f &points3d,
+                             const std::vector<GEOM_FADE2D::Triangle2 *> &triangles,
+                             std::vector<bool> &blacklist,
+                             double laplaceAlpha, unsigned int smoothingIteration,
+                             double maxDelta);
 
   double laplace_alpha_;
   unsigned int smoothing_iteration_;
   double max_delta_;
 
   std::vector<GEOM_FADE2D::Point2> *landmarks_2d_;
-  std::vector<GEOM_FADE2D::Triangle2 *> triangles_;
+  GEOM_FADE2D::Fade_2D *fade_; //stores most of the information
+  std::vector<GEOM_FADE2D::Triangle2 *> triangles_;//pointers to fade_ structure
 
   VecPoint3f landmarks_3d_;
+  std::vector<bool> triangle_blacklist_;
 
   VecTriangle triangles_output_;
   VecPoint2f landmarks_2d_output_;
 
-  void ComputeMeshInPlace(const std::vector<GEOM_FADE2D::Point2> *in_landmarks_2d,
-                          VecPoint3f &in_out_landmarks_3d, VecTriangle &out_triangles) {
-    ;
-  }
-
-
-//  void Project3dLandmarks(const double &focalU, const double &focalV,
-//                        const double &centerU, const double &centerV,
-//                        const double &dimU, const double &dimV,
-//                        const VecPoint3f &landmarks,
-//                        std::vector<GEOM_FADE2D::Point2> &landmarks2D);
-
-  void convert2dLandmarks(const VecPoint2f &in_landmarks_2d);
-
-//  /**
-
-//  */
-//  void filteringAndSmoothing(VecPoint3f &points3d,
-//                             std::vector<GEOM_FADE2D::Triangle2 *> triangles,
-//                             std::vector<bool> &blacklist,
-//                             const double laplaceAlpha = 0.1,
-//                             const unsigned int smoothingIteration = 3,
-//                             const double maxDelta = 20);
-
-
-//  void buildMeshDepthMap(const double &focalU,
-//                         const double &focalV,
-//                         const double &centerU,
-//                         const double &centerV,
-//                         const double &dimU,
-//                         const double &dimV,
-//                         VecPoint3f &in_out_landmarks_3d,
-//                         VecTriangle &output_triangles,
-//                         const double laplaceAlpha = 0.1,
-//                         const unsigned int smoothingIteration = 3,
-//                         const double maxDelta = 0.2);
-
-  void ProjectLandmarks(const double &focalU, const double &focalV, const double &centerU, const double &centerV, const double &dimU, const double &dimV, const mesh_based_mapping::VecPoint3f &landmarks);
 };
-
-
-
-
 
 }
 
