@@ -24,44 +24,74 @@
 #include <mesh_based_mapping/mesh_based_mapping.hpp>
 
 mesh_based_mapping::MeshMapper::MeshMapper(double laplace_alpha,
-    unsigned int smoothing_iteration,
-    double max_delta): laplace_alpha_(laplace_alpha),
-  smoothing_iteration_(smoothing_iteration), max_delta_(max_delta) {
-  landmarks_2d_ = new std::vector<GEOM_FADE2D::Point2>();
+                                           unsigned int smoothing_iteration,
+                                           double max_delta): laplace_alpha_(laplace_alpha),
+    smoothing_iteration_(smoothing_iteration), max_delta_(max_delta) {
+    landmarks_2d_ = new std::vector<GEOM_FADE2D::Point2>();
 }
 
 mesh_based_mapping::MeshMapper::~MeshMapper() {
-  delete landmarks_2d_;
+    delete landmarks_2d_;
 }
 
 void mesh_based_mapping::MeshMapper::Clear() {
-  landmarks_2d_->clear();
-  triangles_.clear();
+    landmarks_2d_->clear();
 
-  landmarks_3d_.clear();
-  landmarks_2d_output_.clear();
-  triangles_output_.clear();
+    triangles_.clear();//TODO is this a leak?
+    landmarks_3d_.clear();
+    landmarks_2d_output_.clear();
+    triangles_output_.clear();
 }
 
 void mesh_based_mapping::MeshMapper::SetPoints(double focal_u, double focal_v,
-    double center_u, double center_v, uint dim_u, uint dim_v,
-    const mesh_based_mapping::VecPoint3f &in_landmarks_3d) {
-  landmarks_3d_ = in_landmarks_3d;
+                                               double center_u, double center_v, uint dim_u, uint dim_v,
+                                               const mesh_based_mapping::VecPoint3f &in_landmarks_3d) {
 
-//  ProjectLandmarks(focal_u, focal_v, center_u, center_v, dim_u, dim_v,
-//                   landmarks_3d_, landmarks_2d_);
+    Clear();
+    landmarks_3d_ = in_landmarks_3d;
+
+    ProjectLandmarks(focal_u, focal_v, center_u, center_v, dim_u, dim_v,
+                     landmarks_3d_);
 }
 
 void mesh_based_mapping::MeshMapper::SetPoints(const
-    mesh_based_mapping::VecPoint2f &in_landmarks_2d,
-    const mesh_based_mapping::VecPoint3f &in_landmarks_3d) {
-  landmarks_3d_ = in_landmarks_3d;
-  //landmarks_2d_ = in_landmarks_2d;
+                                               mesh_based_mapping::VecPoint2f &in_landmarks_2d,
+                                               const mesh_based_mapping::VecPoint3f &in_landmarks_3d) {
+
+    Clear();
+    landmarks_3d_ = in_landmarks_3d;
+    convert2dLandmarks(in_landmarks_2d);
 }
 
 bool mesh_based_mapping::MeshMapper::GetFilteredLandmarks(
-  const mesh_based_mapping::VecPoint3f *&out_landmarks_3d) const {
-  out_landmarks_3d = &landmarks_3d_;
+        const mesh_based_mapping::VecPoint3f *&out_landmarks_3d) const {
+    out_landmarks_3d = &landmarks_3d_;
+}
+
+bool mesh_based_mapping::MeshMapper::GetMesh(const mesh_based_mapping::VecPoint3f *&out_landmarks_3d, const mesh_based_mapping::VecPoint2f *&out_landmarks_2d, const mesh_based_mapping::VecTriangle *&out_triangles) {
+    if (triangles_.size() == 0) {
+        return false;
+    }
+
+    if (triangles_output_.size() == 0 || landmarks_2d_output_.size() == 0) {
+
+    }
+
+    out_landmarks_2d = &landmarks_2d_output_;
+    out_landmarks_3d = &landmarks_3d_;
+    out_triangles = &triangles_output_;
+
+    return true;
+}
+
+
+void mesh_based_mapping::MeshMapper::convert2dLandmarks(const mesh_based_mapping::VecPoint2f &in_landmarks_2d)
+{
+    for(size_t i=0;i<in_landmarks_2d.size();i++)
+    {
+        landmarks_2d_->push_back(GEOM_FADE2D::Point2(in_landmarks_2d[i](0), in_landmarks_2d[i](1)));
+                                 landmarks_2d_->back().setCustomIndex(i);
+    }
 }
 
 //bool mesh_based_mapping::MeshMapper::GetMesh(mesh_based_mapping::VecPoint3f const *  &out_landmarks_3d,
@@ -76,24 +106,7 @@ bool mesh_based_mapping::MeshMapper::GetFilteredLandmarks(
 //  return true;
 //}
 
-bool mesh_based_mapping::MeshMapper::GetMesh(const
-    mesh_based_mapping::VecPoint3f *&out_landmarks_3d,
-    const mesh_based_mapping::VecPoint2f *&out_landmarks_2d,
-    const mesh_based_mapping::VecTriangle *&out_triangles) {
-  if (triangles_.size() == 0) {
-    return false;
-  }
 
-  if (triangles_output_.size() || landmarks_2d_output_.size()) {
-
-  }
-
-  out_landmarks_2d = &landmarks_2d_output_;
-  out_landmarks_3d = &landmarks_3d_;
-  out_triangles = &triangles_output_;
-
-  return true;
-}
 
 //void mesh_based_mapping::MeshMapper::ComputeMeshInPlace(
 //  const mesh_based_mapping::VecPoint2f &in_landmarks_2d,
@@ -103,25 +116,24 @@ bool mesh_based_mapping::MeshMapper::GetMesh(const
 //}
 
 void mesh_based_mapping::MeshMapper::ProjectLandmarks(const double &focalU,
-    const double &focalV, const double &centerU, const double &centerV,
-    const double &dimU, const double &dimV,
-    const mesh_based_mapping::VecPoint3f &landmarks,
-    std::vector<GEOM_FADE2D::Point2> &landmarks2D) {
+                                                      const double &focalV, const double &centerU, const double &centerV,
+                                                      const double &dimU, const double &dimV,
+                                                      const mesh_based_mapping::VecPoint3f &landmarks) {
 
 
-  for (unsigned int i = 0 ; i < landmarks.size() ; i++) {
-    const Eigen::Vector3f &pt_CRef = landmarks[i];
+    for (unsigned int i = 0 ; i < landmarks.size() ; i++) {
+        const Eigen::Vector3f &pt_CRef = landmarks[i];
 
-    double x = ((pt_CRef(0) / pt_CRef(2)) * focalU) + centerU;
-    double y = ((pt_CRef(1) / pt_CRef(2)) * focalV) + centerV;
+        double x = ((pt_CRef(0) / pt_CRef(2)) * focalU) + centerU;
+        double y = ((pt_CRef(1) / pt_CRef(2)) * focalV) + centerV;
 
-    if (x <= 0 || y <= 0 || x >= dimU || y >= dimV) {
-      continue;
+        if (x <= 0 || y <= 0 || x >= dimU || y >= dimV) {
+            continue;
+        }
+
+        landmarks_2d_->push_back(GEOM_FADE2D::Point2(x, y));
+        landmarks_2d_->back().setCustomIndex(i);
     }
-
-    landmarks2D.push_back(GEOM_FADE2D::Point2(x, y));
-    landmarks2D.back().setCustomIndex(i);
-  }
 }
 
 //void mesh_based_mapping::MeshMapper::filteringAndSmoothing(mesh_based_mapping::VecPoint3f &points3d, std::vector<GEOM_FADE2D::Triangle2 *> triangles, std::vector<bool> &blacklist, const double laplaceAlpha, const unsigned int smoothingIteration, const double maxDelta) {

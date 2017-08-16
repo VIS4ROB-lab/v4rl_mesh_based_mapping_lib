@@ -94,11 +94,13 @@ class MeshMapper {
   }
 
 
-  void ProjectLandmarks(const double &focalU, const double &focalV,
-                        const double &centerU, const double &centerV,
-                        const double &dimU, const double &dimV,
-                        const VecPoint3f &landmarks,
-                        std::vector<GEOM_FADE2D::Point2> &landmarks2D);
+//  void Project3dLandmarks(const double &focalU, const double &focalV,
+//                        const double &centerU, const double &centerV,
+//                        const double &dimU, const double &dimV,
+//                        const VecPoint3f &landmarks,
+//                        std::vector<GEOM_FADE2D::Point2> &landmarks2D);
+
+  void convert2dLandmarks(const VecPoint2f &in_landmarks_2d);
 
 //  /**
 
@@ -123,6 +125,7 @@ class MeshMapper {
 //                         const unsigned int smoothingIteration = 3,
 //                         const double maxDelta = 0.2);
 
+  void ProjectLandmarks(const double &focalU, const double &focalV, const double &centerU, const double &centerV, const double &dimU, const double &dimV, const mesh_based_mapping::VecPoint3f &landmarks);
 };
 
 

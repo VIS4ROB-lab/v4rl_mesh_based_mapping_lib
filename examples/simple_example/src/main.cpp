@@ -39,20 +39,21 @@ int main(int, char **) {
   buildHemiSphere(0.01, 0.1, 10, 0, landmarks_3d);
 
   const mesh_based_mapping::VecPoint3f *landmarks_3d_filtered;
-
   const mesh_based_mapping::VecTriangle *triangles;
+  const mesh_based_mapping::VecPoint2f *landmarks_2d;
+
   mesh_based_mapping::MeshMapper mapper;
   mapper.SetPoints(focalU, focalV, centerU, centerV, dimU,dimV, landmarks_3d);
   mapper.ComputeMesh();
-  mapper.GetMesh(landmarks_3d_filtered,triangles);
+  mapper.GetMesh(landmarks_3d_filtered,landmarks_2d,triangles);
 
 //  mesh_based_mapping::buildMeshDepthMap(focalU, focalV, centerU, centerV, dimU,
 //                                        dimV, landmarks_3d_filtered, triangles, laplaceAlpha, smoothingIteration,
 //                                        maxDelta);
 
-  mesh_based_mapping::saveObj("/tmp/mesh_before.obj", landmarks_3d, *triangles);
+  mesh_based_mapping::saveObj("/tmp/mesh_before1.obj", landmarks_3d, *triangles);
 
-  mesh_based_mapping::saveObj("/tmp/mesh_after.obj", *landmarks_3d_filtered,*triangles);
+  mesh_based_mapping::saveObj("/tmp/mesh_after1.obj", *landmarks_3d_filtered,*triangles);
 
   return 0;
 }
