@@ -38,11 +38,56 @@ mesh_based_mapping::MeshMapper::~MeshMapper() {
 
 void mesh_based_mapping::MeshMapper::Clear() {
   landmarks_2d_->clear();
-
-  triangles_.clear();//TODO is this a leak?
+  triangles_.clear();
   landmarks_3d_.clear();
+
   landmarks_2d_output_.clear();
   triangles_output_.clear();
+  filtered_landmarks_3d_output_.clear();
+}
+
+void mesh_based_mapping::MeshMapper::SaveObj(std::string filepath, uint dim_u,
+    uint dim_v) {
+  std::ofstream ofs;
+  ofs.open(filepath, std::ofstream::out);
+
+
+  for (unsigned int i = 0; i < landmarks_3d_.size(); i++) {
+    Eigen::Vector3f &hPoint = landmarks_3d_[i];
+    ofs << "v "  << hPoint[0] << " " << hPoint[1] << " " << hPoint[2]  << std::endl;
+  }
+
+  if (dim_u != 0 && dim_v != 0) {
+    for (unsigned int i = 0; i < landmarks_2d_->size(); i++) {
+      GEOM_FADE2D::Point2 &hPoint = landmarks_2d_->at(i);
+      ofs << "vt "  << hPoint.x() / (double)dim_u << " " << hPoint.y() /
+          (double)dim_v << std::endl;
+    }
+  }
+
+  for (unsigned int i = 0; i < triangles_.size(); i++) {
+    if (triangle_blacklist_[i]) {
+      continue;
+    }
+
+    GEOM_FADE2D::Triangle2 *t = triangles_[i];
+
+    if (dim_u != 0 && dim_v != 0) {
+      ofs << "f "  << t->getCorner(2)->getCustomIndex() + 1 << "/" << t->getCorner(
+            2)->getCustomIndex() + 1 << " ";
+      ofs << t->getCorner(1)->getCustomIndex() + 1 << "/" << t->getCorner(
+            1)->getCustomIndex() + 1 << " ";
+      ofs << t->getCorner(0)->getCustomIndex() + 1 << "/" << t->getCorner(
+            0)->getCustomIndex() + 1 << std::endl;
+    } else {
+
+      ofs << "f "  << t->getCorner(2)->getCustomIndex() + 1 << " "
+          << t->getCorner(1)->getCustomIndex() + 1 << " "
+          << t->getCorner(0)->getCustomIndex() + 1 << std::endl;
+    }
+  }
+
+  ofs.close();
 }
 
 void mesh_based_mapping::MeshMapper::SetPoints(double focal_u, double focal_v,
@@ -78,9 +123,45 @@ void mesh_based_mapping::MeshMapper::ComputeMesh() {
 }
 
 bool mesh_based_mapping::MeshMapper::GetFilteredLandmarks(
-  const mesh_based_mapping::VecPoint3f *&out_landmarks_3d) const {
+  const mesh_based_mapping::VecPoint3f *&out_landmarks_3d) {
+  if (triangles_.size() == 0) {
+    return false;
+  }
+
+  std::vector<bool> landmarks_3d_blacklist(landmarks_3d_.size(), true);
+
+  if (filtered_landmarks_3d_output_.size() == 0) {
+
+    for (size_t i = 0; i < triangles_.size(); i++) {
+      if (triangle_blacklist_[i]) {
+        continue;
+      }
+
+      GEOM_FADE2D::Triangle2 *itri = triangles_[i];
+
+      triangles_output_.push_back(Eigen::Vector3i(itri->getCorner(
+                                    0)->getCustomIndex(),
+                                  itri->getCorner(1)->getCustomIndex(),
+                                  itri->getCorner(2)->getCustomIndex()));
+      landmarks_3d_blacklist.at(itri->getCorner(0)->getCustomIndex()) = false;
+      landmarks_3d_blacklist.at(itri->getCorner(1)->getCustomIndex()) = false;
+      landmarks_3d_blacklist.at(itri->getCorner(2)->getCustomIndex()) = false;
+    }
+
+    for (size_t i = 0; i < landmarks_3d_.size(); i++) {
+      if (landmarks_3d_blacklist[i]) {
+        continue;
+      }
+
+      filtered_landmarks_3d_output_.push_back(landmarks_3d_[i]);
+    }
+  }
+
+
   out_landmarks_3d = &landmarks_3d_;
+
 }
+
 
 bool mesh_based_mapping::MeshMapper::GetMesh(const
     mesh_based_mapping::VecPoint3f *&out_landmarks_3d,
@@ -97,6 +178,10 @@ bool mesh_based_mapping::MeshMapper::GetMesh(const
     }
 
     for (size_t i = 0; i < triangles_.size(); i++) {
+      if (triangle_blacklist_[i]) {
+        continue;
+      }
+
       GEOM_FADE2D::Triangle2 *itri = triangles_[i];
 
       triangles_output_.push_back(Eigen::Vector3i(itri->getCorner(

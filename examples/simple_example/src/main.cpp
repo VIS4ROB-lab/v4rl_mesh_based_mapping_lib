@@ -44,9 +44,13 @@ int main(int, char **) {
   mapper.ComputeMesh();
   mapper.GetMesh(landmarks_3d_filtered,landmarks_2d,triangles);
 
-  mesh_based_mapping::saveObj("/tmp/mesh_before2.obj", landmarks_3d, *triangles);
 
-  mesh_based_mapping::saveObj("/tmp/mesh_after2.obj", *landmarks_3d_filtered,*triangles);
+  mesh_based_mapping::saveObj("/tmp/mesh_before3.obj", landmarks_3d, *triangles);
+
+  mapper.SaveObj("/tmp/mesh_after3.obj",dimU,dimV);
+
+
+
 
   return 0;
 }

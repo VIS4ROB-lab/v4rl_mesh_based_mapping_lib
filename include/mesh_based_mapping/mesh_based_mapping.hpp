@@ -62,12 +62,17 @@ class MeshMapper {
 
   void ComputeMesh();
 
+  bool GetFilteredLandmarks(const VecPoint3f *&out_landmarks_3d);
+
   bool GetMesh(const VecPoint3f *&out_landmarks_3d,
                const VecPoint2f *&out_landmarks_2d,
                const VecTriangle
                * &out_triangles); //on the landmarks vector could include unused landmaks by the triangles.(noise)
 
   void Clear();
+
+
+  void SaveObj(std::string filepath, uint dim_u=0, uint dim_v=0);
 
  private:
 
@@ -92,6 +97,7 @@ class MeshMapper {
   std::vector<GEOM_FADE2D::Triangle2 *> triangles_;//pointers to fade_ structure
 
   VecPoint3f landmarks_3d_;
+  VecPoint3f filtered_landmarks_3d_output_;
   std::vector<bool> triangle_blacklist_;
 
   VecTriangle triangles_output_;
