@@ -28,7 +28,7 @@ mesh_based_mapping::MeshMapper::MeshMapper(double laplace_alpha,
     double max_delta): laplace_alpha_(laplace_alpha),
   smoothing_iteration_(smoothing_iteration), max_delta_(max_delta) {
   landmarks_2d_ = new std::vector<GEOM_FADE2D::Point2>();
-  fade_ = new GEOM_FADE2D::Fade_2D();
+  fade_ = new GEOM_FADE2D::Fade_2D(500);
 }
 
 mesh_based_mapping::MeshMapper::~MeshMapper() {
@@ -37,6 +37,9 @@ mesh_based_mapping::MeshMapper::~MeshMapper() {
 }
 
 void mesh_based_mapping::MeshMapper::Clear() {
+  delete fade_;
+  fade_ = new GEOM_FADE2D::Fade_2D(500);
+
   landmarks_2d_->clear();
   triangles_.clear();
   landmarks_3d_.clear();
@@ -106,14 +109,18 @@ void mesh_based_mapping::MeshMapper::SetPoints(const
     const mesh_based_mapping::VecPoint3f &in_landmarks_3d) {
 
   Clear();
+  assert(in_landmarks_2d.size() == in_landmarks_3d.size());
+
   landmarks_3d_ = in_landmarks_3d;
   convert2dLandmarks(in_landmarks_2d);
 }
 
 void mesh_based_mapping::MeshMapper::ComputeMesh() {
 
+
   fade_->insert(*landmarks_2d_);
   fade_->getTrianglePointers(triangles_);
+  //fade_->writeObj("/tmp/file.obj");
 
   triangle_blacklist_.resize(triangles_.size(), false);
 

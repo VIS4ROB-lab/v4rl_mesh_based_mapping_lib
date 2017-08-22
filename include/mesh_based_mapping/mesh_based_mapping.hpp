@@ -26,8 +26,8 @@
 #define MESH_BASED_MAPPING_MESH_MAPPING_H_
 
 #include <iomanip>
-#include <Eigen/Core>
 #include <memory>
+#include <Eigen/Core>
 
 namespace GEOM_FADE2D {
 class Point2;

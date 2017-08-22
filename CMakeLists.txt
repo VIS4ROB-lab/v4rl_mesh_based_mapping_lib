@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.0)
 project(v4rl_mesh_based_mapping_lib)
 
-
+set(CMAKE_BUILD_TYPE Debug)
 
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 set(Boost_USE_MULTITHREADED ON)
@@ -22,4 +22,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/third_par
 
 
 add_subdirectory(examples/simple_example)
+
+add_subdirectory(examples/okvis_dataset_example)
 

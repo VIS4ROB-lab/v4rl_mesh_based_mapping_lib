@@ -8,7 +8,7 @@ namespace mesh_based_mapping {
 
 void saveObj(std::string filepath,
              const VecPoint3f &landmarks_3d,
-             const VecTriangle &triangles) {
+             const VecTriangle &triangles = VecTriangle()) {
 
   std::ofstream ofs;
   ofs.open(filepath, std::ofstream::out);

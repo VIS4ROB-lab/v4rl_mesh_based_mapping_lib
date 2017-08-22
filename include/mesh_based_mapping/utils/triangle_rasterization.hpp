@@ -1,6 +1,13 @@
 
-#ifndef MESH_BASED_MAPPING_FILE_IO_H_
-#define MESH_BASED_MAPPING_FILE_IO_H_
+#ifndef MESH_BASED_MAPPING_TRIANGLE_RASTERIZATION_HPP_
+#define MESH_BASED_MAPPING_TRIANGLE_RASTERIZATION_HPP_
+
+
+#include <algorithm>
+#include <opencv2/core/core.hpp>
+
+#include<mesh_based_mapping/mesh_based_mapping.hpp>
+
 
 namespace mesh_based_mapping {
 
@@ -45,9 +52,10 @@ float edgeFunction(const cv::Point2f &a, const cv::Point2f &b,
   return (c.x - a.x) * (b.y - a.y) - (c.y - a.y) * (b.x - a.x);
 }
 
+
 void rasterTriangle(const std::vector<cv::Point> &points,
                     const  std::vector<float> &zs,
-                    const GEOM_FADE2D::Triangle2 *itri,
+                   // const GEOM_FADE2D::Triangle2 *itri,
                     cv::Mat &resultMap) {
 
   cv::Point2f v0Raster = points[0];
@@ -78,11 +86,11 @@ void rasterTriangle(const std::vector<cv::Point> &points,
       if (w0 >= 0 && w1 >= 0 && w2 >= 0) {
         float oneOverZ = iz0 * w0 + iz1 * w1 + iz2 * w2;
         float z = 1.0f / oneOverZ;
-        resultMap.at<cv::Vec2f>(y, x)[0] = z;
+        resultMap.at<float>(y, x) = z;
         int index;
         float maxVal;
         maxIndex3(w0, w1, w2, maxVal, index);
-        resultMap.at<cv::Vec2f>(y, x)[1] = itri->getCorner(index)->getCustomIndex();
+       // resultMap.at<cv::Vec2f>(y, x)[1] = itri->getCorner(index)->getCustomIndex();
       }
     }
   }
@@ -92,6 +100,35 @@ void rasterTriangle(const std::vector<cv::Point> &points,
  *   End of the code adapted from scratchapixel
  *   Copyright (C) 2012  www.scratchapixel.com - GPLv3
  */
+
+void RasterMesh(const VecPoint2f &landmarks_2d,
+                    const VecPoint3f &landmarks_3d,
+                    const VecTriangle &triangles,
+                    cv::Mat &result_map) {
+
+    result_map.setTo(0);
+
+    //write on the result map
+    for (uint i = 0; i < triangles.size() ; i++) {
+
+      const Eigen::Vector3i &itri = triangles[i];
+      std::vector<cv::Point> tpts(3);
+      std::vector<float> zs(3);
+      tpts[0]    = cv::Point(landmarks_2d[itri(0)](0), landmarks_2d[itri(0)](1));
+      zs[0]      = landmarks_3d[itri(0)](2);
+
+      tpts[1]    = cv::Point(landmarks_2d[itri(1)](0), landmarks_2d[itri(1)](1));
+      zs[1]      = landmarks_3d[itri(1)](2);
+
+      tpts[2]    = cv::Point(landmarks_2d[itri(2)](0), landmarks_2d[itri(2)](1));
+      zs[2]      = landmarks_3d[itri(2)](2);
+
+      rasterTriangle(tpts, zs, result_map);
+    }
+
+
+}
+
 
 }
 
