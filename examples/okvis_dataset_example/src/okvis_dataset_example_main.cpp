@@ -58,7 +58,7 @@ int main(int, char **) {
   const mesh_based_mapping::VecTriangle *out_triangles;
   const mesh_based_mapping::VecPoint2f *out_landmarks_2d;
 
-  mesh_based_mapping::MeshMapper mapper(0.3, 10);
+  mesh_based_mapping::MeshMapper mapper(0.3,3,0.5);
 
   FeatureLandmarkFrameData okvis_data;
   cv::Mat result_map = cv::Mat::zeros(cv::Size(752,480), CV_32FC1);
@@ -75,8 +75,8 @@ int main(int, char **) {
       continue;
     }
 
-    mapper.SetPoints(in_landmarks_2d, in_landmarks_3d);
-    // mapper.SetPoints(470,470,376,247,752,480, in_landmarks_3d);
+    //mapper.SetPoints(in_landmarks_2d, in_landmarks_3d);
+    mapper.SetPoints(470,470,376,247,752,480, in_landmarks_3d);
     mapper.ComputeMesh();
     mapper.GetMesh(out_landmarks_3d, out_landmarks_2d, out_triangles);
 //    std::cout << count++ << " " << okvis_data.timestamp << " " <<

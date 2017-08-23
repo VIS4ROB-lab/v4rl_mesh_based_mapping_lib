@@ -48,7 +48,7 @@ class MeshMapper {
  public:
   MeshMapper(double laplace_alpha = 0.1,
              unsigned int smoothing_iteration = 3,
-             double max_delta = 20);
+             double max_delta = 0.2);
 
   ~MeshMapper();
 

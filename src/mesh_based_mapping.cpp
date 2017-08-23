@@ -98,10 +98,8 @@ void mesh_based_mapping::MeshMapper::SetPoints(double focal_u, double focal_v,
     const mesh_based_mapping::VecPoint3f &in_landmarks_3d) {
 
   Clear();
-  landmarks_3d_ = in_landmarks_3d;
-
   ProjectLandmarks(focal_u, focal_v, center_u, center_v, dim_u, dim_v,
-                   landmarks_3d_);
+                   in_landmarks_3d);
 }
 
 void mesh_based_mapping::MeshMapper::SetPoints(const
@@ -186,7 +184,7 @@ bool mesh_based_mapping::MeshMapper::GetMesh(const
 
     for (size_t i = 0; i < triangles_.size(); i++) {
       if (triangle_blacklist_[i]) {
-        continue;
+              continue;
       }
 
       GEOM_FADE2D::Triangle2 *itri = triangles_[i];
@@ -233,8 +231,10 @@ void mesh_based_mapping::MeshMapper::ProjectLandmarks(const double &focalU,
       continue;
     }
 
-    landmarks_2d_->push_back(GEOM_FADE2D::Point2(x, y));
-    landmarks_2d_->back().setCustomIndex(i);
+    GEOM_FADE2D::Point2 pt = GEOM_FADE2D::Point2(x, y);
+    pt.setCustomIndex(landmarks_2d_->size());
+    landmarks_2d_->push_back(pt);
+    landmarks_3d_.push_back(pt_CRef);
   }
 }
 

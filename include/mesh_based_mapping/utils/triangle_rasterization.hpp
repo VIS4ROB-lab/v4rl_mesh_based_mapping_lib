@@ -61,10 +61,10 @@ void rasterTriangle(const std::vector<cv::Point> &points,
   cv::Point2f v0Raster = points[0];
   cv::Point2f v1Raster = points[1];
   cv::Point2f v2Raster = points[2];
-  float x0 = min3(v0Raster.x, v1Raster.x, v2Raster.x);
-  float y0 = min3(v0Raster.y, v1Raster.y, v2Raster.y);
-  float x1 = max3(v0Raster.x, v1Raster.x, v2Raster.x);
-  float y1 = max3(v0Raster.y, v1Raster.y, v2Raster.y);
+  float x0 = std::max(min3(v0Raster.x, v1Raster.x, v2Raster.x),.0f);
+  float y0 = std::max(min3(v0Raster.y, v1Raster.y, v2Raster.y),.0f);
+  float x1 = std::min(max3(v0Raster.x, v1Raster.x, v2Raster.x),(float)resultMap.cols);
+  float y1 = std::min(max3(v0Raster.y, v1Raster.y, v2Raster.y),(float)resultMap.rows);
 
 
   float area = edgeFunction(v0Raster, v1Raster, v2Raster);
