@@ -93,16 +93,17 @@ void mesh_based_mapping::MeshMapper::SaveObj(std::string filepath, uint dim_u,
   ofs.close();
 }
 
-void mesh_based_mapping::MeshMapper::SetPoints(double focal_u, double focal_v,
+int mesh_based_mapping::MeshMapper::SetPoints(double focal_u, double focal_v,
     double center_u, double center_v, uint dim_u, uint dim_v,
     const mesh_based_mapping::VecPoint3f &in_landmarks_3d) {
 
   Clear();
   ProjectLandmarks(focal_u, focal_v, center_u, center_v, dim_u, dim_v,
                    in_landmarks_3d);
+  return landmarks_2d_->size();
 }
 
-void mesh_based_mapping::MeshMapper::SetPoints(const
+int mesh_based_mapping::MeshMapper::SetPoints(const
     mesh_based_mapping::VecPoint2f &in_landmarks_2d,
     const mesh_based_mapping::VecPoint3f &in_landmarks_3d) {
 
@@ -111,12 +112,19 @@ void mesh_based_mapping::MeshMapper::SetPoints(const
 
   landmarks_3d_ = in_landmarks_3d;
   convert2dLandmarks(in_landmarks_2d);
+
+  return landmarks_2d_->size();
 }
 
-void mesh_based_mapping::MeshMapper::ComputeMesh() {
+bool mesh_based_mapping::MeshMapper::ComputeMesh() {
 
+  if (landmarks_2d_->size() < 5) {
+    return false;
+  }
 
   fade_->insert(*landmarks_2d_);
+
+
   fade_->getTrianglePointers(triangles_);
   //fade_->writeObj("/tmp/file.obj");
 
@@ -184,7 +192,7 @@ bool mesh_based_mapping::MeshMapper::GetMesh(const
 
     for (size_t i = 0; i < triangles_.size(); i++) {
       if (triangle_blacklist_[i]) {
-              continue;
+        continue;
       }
 
       GEOM_FADE2D::Triangle2 *itri = triangles_[i];
@@ -293,7 +301,7 @@ void mesh_based_mapping::MeshMapper::filteringAndSmoothing(
         || (borderTriangle[i] &&
             (std::abs((points3d[t->getCorner(2)->getCustomIndex()] - points3d[t->getCorner(
                          0)->getCustomIndex()]).norm())) > 0.3)) {
-      blacklist[i] = true;
+ //     blacklist[i] = true;
     }
   }
 

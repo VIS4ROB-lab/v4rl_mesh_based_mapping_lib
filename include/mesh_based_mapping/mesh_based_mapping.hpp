@@ -53,14 +53,14 @@ class MeshMapper {
   ~MeshMapper();
 
 
-  void SetPoints(double focal_u, double focal_v,
+  int SetPoints(double focal_u, double focal_v,
                  double center_u, double center_v,
                  uint dim_u, uint dim_v, const VecPoint3f &in_landmarks_3d);
 
-  void SetPoints(const VecPoint2f &in_landmarks_2d,
+  int SetPoints(const VecPoint2f &in_landmarks_2d,
                  const VecPoint3f &in_landmarks_3d);
 
-  void ComputeMesh();
+  bool ComputeMesh();
 
   bool GetFilteredLandmarks(const VecPoint3f *&out_landmarks_3d);
 

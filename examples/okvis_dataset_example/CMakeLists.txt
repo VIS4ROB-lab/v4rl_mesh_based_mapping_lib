@@ -1,14 +1,23 @@
 
 ADD_DEFINITIONS (-march=native -std=c++11 )
 
-find_package( Boost COMPONENTS system filesystem thread REQUIRED )
 set(OpenCV_DIR /home/lucas/code/opencv-2.4.13.2_install/share/OpenCV)
-find_package(OpenCV REQUIRED core highgui )
+
+#set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+
+#find_package( Eigen3 REQUIRED )
+#include_directories( ${EIGEN3_INCLUDE_DIR} )
+
+find_package( Boost COMPONENTS system filesystem thread REQUIRED )
+#find_package(OpenCV REQUIRED core highgui )
+
+
+
 
 include_directories( ${Boost_INCLUDE_DIRS} )
-include_directories( ${OpenCV_INCLUDE_DIRS} )
-include_directories(${CMAKE_SOURCE_DIR}/third_party/minkindr/include)
-include_directories(${CMAKE_SOURCE_DIR}/third_party/v4rl_dataset_lib/include)
+#include_directories( ${OpenCV_INCLUDE_DIRS} )
+include_directories( ${CMAKE_SOURCE_DIR}/third_party/minkindr/include )
+include_directories( ${CMAKE_SOURCE_DIR}/third_party/v4rl_dataset_lib/include )
 
 FILE(
   GLOB HPPS 
