@@ -20,13 +20,12 @@ void imagesc(const std::string &winname, cv::Mat image, double min = 0,
              double max = 0) {
   cv::Mat g_result_map, c_result_map;
 
-  double scale;
-
   if (min == max) {
     cv::minMaxIdx(image, &min, &max);
-    scale = 255.0 / std::abs(max - min);
+
   }
 
+  double scale = 255.0 / std::abs(max - min);
   std::cout << winname << " min:" << min << " max:" << max << std::endl;
   image.convertTo(g_result_map, CV_8UC1, scale, -scale * min);
 
@@ -66,7 +65,7 @@ void ReadCsvDepth(uint64 timestamp, cv::Mat &image) {
   fs2["one_matrix"] >> image;
 
   if (image.rows) {
-    imagesc("gt map", image);
+    imagesc("gt map", image, 4, 9);
     cv::moveWindow("gt map", 50, 50);
   }
 
@@ -95,12 +94,10 @@ int main(int, char **) {
   const mesh_based_mapping::VecTriangle *out_triangles;
   const mesh_based_mapping::VecPoint2f *out_landmarks_2d;
 
-  mesh_based_mapping::MeshMapper mapper(0.3, 0, 0.5);
+  mesh_based_mapping::MeshMapper mapper(0.3, 3, 0.5);
 
   FeatureLandmarkFrameData okvis_data;
   cv::Mat result_map = cv::Mat::zeros(cv::Size(752, 480), CV_32FC1);
-  cv::Mat c_result_map = cv::Mat::zeros(cv::Size(752, 480), CV_8UC3);
-  cv::Mat g_result_map = cv::Mat::zeros(cv::Size(752, 480), CV_8UC1);
   cv::Mat gt_map;
 
 
@@ -140,22 +137,12 @@ int main(int, char **) {
       cv::Mat gt_map_float;
       gt_map.convertTo(gt_map_float, CV_32FC1);
       cv::Mat diff = result_map - gt_map_float;
-      imagesc("triang", result_map);
-      imagesc("diff", diff,-0.5,0.5);
+      imagesc("triang", result_map, 4, 9);
+      imagesc("diff", diff, -1, 1);
     } else {
       std::cout << "not enougth point in the field of view" << std::endl;
     }
 
-
-
-    //    double min;
-//    double max;
-//    cv::minMaxIdx(result_map, &min, &max);
-
-//    result_map.convertTo(g_result_map, CV_8UC1, 255 / (max - min), -min);
-
-//    cv::applyColorMap(g_result_map, c_result_map, cv::COLORMAP_JET);
-    //cv::imshow("depth map", c_result_map);
 
     if ((char)27 == cv::waitKey(100)) {
       break;
