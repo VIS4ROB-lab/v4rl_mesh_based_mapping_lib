@@ -17,7 +17,7 @@ const double kMinDistanceFromCamera = 0.005;//meters
 
 
 void imagesc(const std::string &winname, cv::Mat image, double min = 0,
-             double max = 0) {
+             double max = 0,int colormap = cv::COLORMAP_JET) {
   cv::Mat g_result_map, c_result_map;
 
   if (min == max) {
@@ -29,7 +29,7 @@ void imagesc(const std::string &winname, cv::Mat image, double min = 0,
   std::cout << winname << " min:" << min << " max:" << max << std::endl;
   image.convertTo(g_result_map, CV_8UC1, scale, -scale * min);
 
-  cv::applyColorMap(g_result_map, c_result_map, cv::COLORMAP_JET);
+  cv::applyColorMap(g_result_map, c_result_map, colormap);
   cv::imshow(winname, c_result_map);
 }
 
@@ -53,8 +53,6 @@ void ConvertSelectOkvisLandmarks(const FeatureLandmarkFrameData &frame_data,
 //      }
     }
   }
-
-
 }
 
 void ReadCsvDepth(uint64 timestamp, cv::Mat &image) {
@@ -65,10 +63,8 @@ void ReadCsvDepth(uint64 timestamp, cv::Mat &image) {
   fs2["one_matrix"] >> image;
 
   if (image.rows) {
-    imagesc("gt map", image, 4, 9);
-    cv::moveWindow("gt map", 50, 50);
+    imagesc("gt map", image, 4, 9,cv::COLORMAP_BONE);
   }
-
 }
 
 int main(int, char **) {
@@ -94,7 +90,7 @@ int main(int, char **) {
   const mesh_based_mapping::VecTriangle *out_triangles;
   const mesh_based_mapping::VecPoint2f *out_landmarks_2d;
 
-  mesh_based_mapping::MeshMapper mapper(0.3, 3, 0.5);
+  mesh_based_mapping::MeshMapper mapper(0.3, 4, 0.3);
 
   FeatureLandmarkFrameData okvis_data;
   cv::Mat result_map = cv::Mat::zeros(cv::Size(752, 480), CV_32FC1);
@@ -137,12 +133,12 @@ int main(int, char **) {
       cv::Mat gt_map_float;
       gt_map.convertTo(gt_map_float, CV_32FC1);
       cv::Mat diff = result_map - gt_map_float;
-      imagesc("triang", result_map, 4, 9);
+      imagesc("triang", result_map, 4, 9,cv::COLORMAP_BONE);
       imagesc("diff", diff, -1, 1);
+      imagesc("abs-diff", cv::abs(diff), 0, 1,cv::COLORMAP_AUTUMN);
     } else {
       std::cout << "not enougth point in the field of view" << std::endl;
     }
-
 
     if ((char)27 == cv::waitKey(100)) {
       break;
