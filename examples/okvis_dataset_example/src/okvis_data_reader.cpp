@@ -64,6 +64,7 @@ bool OkvisDataReader::GetSample(uint64_t timestamp,
     it->second.pos = T_CW.transform(it->second.pos);
     // std::cout << 1.0<<"," << it->second.pos[0] <<","<<it->second.pos[1] <<","<<it->second.pos[2] << std::endl;
   }
+  return true;
 }
 
 bool OkvisDataReader::Init(std::string features_dataset_filename,
